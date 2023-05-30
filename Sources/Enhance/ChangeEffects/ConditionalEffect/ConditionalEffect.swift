@@ -7,8 +7,8 @@ public protocol ConditionalEffect {
 }
 
 public extension View {
-    func conditionalEffect(_ effect: some ConditionalEffect, condition: Bool) -> some View {
-        self.modifier(ConditionalEffectModifier(effect: effect, isActive: condition))
+    func conditionalEffect(_ effect: some ConditionalEffect, condition: Bool, isEnabled: Bool = true) -> some View {
+        self.modifier(ConditionalEffectModifier(effect: effect, isActive: condition && isEnabled))
     }
 }
 
