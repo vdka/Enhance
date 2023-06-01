@@ -10,3 +10,7 @@ public func lerp<V: BinaryFloatingPoint, T: BinaryFloatingPoint>(t: T, _ v0: V, 
 public func clamp<T: Comparable>(_ value: T, minValue: T, maxValue: T) -> T {
     return min(max(value, minValue), maxValue)
 }
+
+public extension FloatingPoint {
+    static var tau: Self { .pi * 2 }
+}

@@ -2,6 +2,10 @@
 import SwiftUI
 
 public struct ScaleChangeEffect: ChangeEffect {
+    public var delay: TimeInterval = 0
+    public var cooldown: TimeInterval = 3
+    public var defaultAnimation: Animation? = .easeInOut
+
     public var amount: CGFloat
 
     public init(amount: CGFloat) {
@@ -9,15 +13,16 @@ public struct ScaleChangeEffect: ChangeEffect {
     }
 
     public func modifier(count: Int) -> some ViewModifier {
-        Modifier(amount: amount, animatableData: CGFloat(count)).defaultAnimation(.easeInOut)
+        Modifier(amount: amount, animatableData: CGFloat(count))
     }
 
     struct Modifier: GeometryEffect {
         var amount: CGFloat
         var animatableData: CGFloat
+        var factor: CGFloat { sin(animatableData.truncatingRemainder(dividingBy: 1) * .pi) }
 
         func effectValue(size: CGSize) -> ProjectionTransform {
-            let scale = abs(sin(animatableData * .pi)) * (amount - 1) + 1
+            let scale = 1 + factor * (amount - 1)
             let transform = CGAffineTransform.identity
                 .translatedBy(x: size.width / 2, y: size.height / 2)
                 .scaledBy(x: scale, y: scale)
@@ -37,6 +42,12 @@ public extension ChangeEffect where Self == ScaleChangeEffect {
 
 struct Scale_Previews: PreviewProvider {
     static var previews: some View {
-        ChangeEffectPreview(effect: .scale)
+        ChangeEffectPreview { $date in
+            Button(action: { date = .now }) {
+                Label("Checkout", systemImage: "cart")
+            }
+            .buttonStyle(.borderedProminent)
+            .changeEffect(.scale, value: date)
+        }
     }
 }

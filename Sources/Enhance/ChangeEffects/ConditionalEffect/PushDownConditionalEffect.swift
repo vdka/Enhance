@@ -3,10 +3,13 @@ import SwiftUI
 
 public struct PushDownConditionalEffect: ConditionalEffect {
 
+    public var delay: TimeInterval = 0
+    public var defaultAnimation: Animation? = .bouncy
+
     public init() { }
 
     public func modifier(isActive: Bool) -> some ViewModifier {
-        Modifier(animatableData: isActive ? 1 : 0).defaultAnimation(.bouncy)
+        Modifier(animatableData: isActive ? 1 : 0)
     }
 
     struct Modifier: GeometryEffect {
@@ -42,12 +45,15 @@ struct PushDown_Previews: PreviewProvider {
                 .padding(.horizontal, 64)
                 .background(.tint, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .opacity(configuration.isPressed ? 0.75 : 1)
-                .conditionalEffect(PushDownConditionalEffect.pushDown, condition: configuration.isPressed)
+                .conditionalEffect(.pushDown, condition: configuration.isPressed)
                 .changeEffect(.feedbackHapticSelection, value: configuration.isPressed)
         }
     }
 
     static var previews: some View {
-        Button("Submit", action: { }).buttonStyle(PushDownButtonStyle())
+        Button(action: { }) {
+            Label("Checkout", systemImage: "cart")
+        }
+        .buttonStyle(PushDownButtonStyle())
     }
 }

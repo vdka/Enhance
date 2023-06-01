@@ -5,6 +5,10 @@ import UIKit
 // MARK: - Selection Feedback
 
 public struct SelectionFeedbackChangeEffect: ChangeEffect {
+    public var delay: TimeInterval { 0 }
+    public var cooldown: TimeInterval = 3
+    public var defaultAnimation: Animation? { nil }
+
     public var generator = UISelectionFeedbackGenerator()
 
     public func modifier(count: Int) -> some ViewModifier {
@@ -33,6 +37,10 @@ public extension ChangeEffect where Self == SelectionFeedbackChangeEffect {
 // MARK: - Impact Feedback
 
 public struct ImpactFeedbackChangeEffect: ChangeEffect {
+    public var delay: TimeInterval { 0 }
+    public var cooldown: TimeInterval = 3
+    public var defaultAnimation: Animation? { nil }
+
     public var intensity: CGFloat?
     public var generator: UIImpactFeedbackGenerator
 
@@ -90,6 +98,10 @@ public extension ChangeEffect where Self == ImpactFeedbackChangeEffect {
 // MARK: - Notification Feedback
 
 public struct NotificationFeedbackChangeEffect: ChangeEffect {
+    public var delay: TimeInterval { 0 }
+    public var cooldown: TimeInterval = 3
+    public var defaultAnimation: Animation? { nil }
+
     public var type: UINotificationFeedbackGenerator.FeedbackType
     public var generator = UINotificationFeedbackGenerator()
 

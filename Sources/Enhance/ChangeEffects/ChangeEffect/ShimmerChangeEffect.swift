@@ -1,18 +1,18 @@
 
 import SwiftUI
 
-struct ShimmerChangeEffect: ChangeEffect {
+public struct ShimmerChangeEffect: ChangeEffect {
+    public var delay: TimeInterval = 0
+    public var cooldown: TimeInterval = 3
+    public var defaultAnimation: Animation? = .easeInOut(duration: 2.5)
 
-    func modifier(count: Int) -> some ViewModifier {
-        AnimatedMask(phase: CGFloat(count)).defaultAnimation(.easeInOut(duration: 2.5))
+    public func modifier(count: Int) -> some ViewModifier {
+        AnimatedMask(animatableData: CGFloat(count))
     }
 
     struct AnimatedMask: ViewModifier, Animatable {
-        var phase: CGFloat
-        var animatableData: CGFloat {
-            get { phase }
-            set { phase = newValue.truncatingRemainder(dividingBy: 1) }
-        }
+        var animatableData: CGFloat
+        var phase: CGFloat { animatableData.truncatingRemainder(dividingBy: 1) }
 
         func body(content: Content) -> some View {
             content
@@ -48,29 +48,18 @@ struct ShimmerChangeEffect: ChangeEffect {
     }
 }
 
-extension ChangeEffect where Self == ShimmerChangeEffect {
+public extension ChangeEffect where Self == ShimmerChangeEffect {
     static var shimmer: Self { Self() }
 }
 
 struct Shimmer_Previews: PreviewProvider {
-    struct ShimmerPreview: View {
-        @State var value = false
-
-        let timer = Timer.publish(every: 3, on: .main, in: .common).autoconnect()
-
-        var body: some View {
-            Button(action: { value.toggle() }) {
+    static var previews: some View {
+        ChangeEffectPreview { $date in
+            Button(action: { date = .now }) {
                 Label("Checkout", systemImage: "cart")
             }
             .buttonStyle(.borderedProminent)
-            .changeEffect(.shimmer, value: value)
-            .onReceive(timer) { _ in
-                value.toggle()
-            }
+            .changeEffect(.shimmer, value: date)
         }
-    }
-
-    static var previews: some View {
-        ShimmerPreview()
     }
 }
