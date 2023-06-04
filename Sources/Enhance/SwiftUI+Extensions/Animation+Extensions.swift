@@ -36,22 +36,3 @@ public extension Animation {
     /// A fairly interactive spring animation with much less damping resulting in it being a lot more **bouncy**
     static var bouncy: Animation { .interactiveSpring(response: 0.25, dampingFraction: 0.3) }
 }
-
-internal extension ViewModifier {
-    func defaultAnimation(_ defaultAnimation: Animation) -> some ViewModifier {
-        self.transaction { transaction in
-            if let animation = transaction.animation {
-                transaction.animation = animation.isDefaultButtonAnimation ? defaultAnimation : animation
-                return
-            }
-            transaction.animation = defaultAnimation
-        }
-    }
-}
-
-internal extension Animation {
-    // Only way to detect this that I could think of
-    var isDefaultButtonAnimation: Bool {
-        debugDescription.contains("ax: 1.0, bx: -0.75, cx: 0.75, ay: -1.7000000000000004, by: 2.4000000000000004, cy: 0.30000000000000004")
-    }
-}

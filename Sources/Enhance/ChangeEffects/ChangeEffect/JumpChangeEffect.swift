@@ -37,7 +37,7 @@ public extension ChangeEffect where Self == JumpChangeEffect {
 struct Jump_Previews: PreviewProvider {
     static var effect: JumpChangeEffect {
         var effect = JumpChangeEffect(height: 15)
-//        effect.delay = 1
+        effect.delay = 0.5
         return effect
     }
     static var previews: some View {

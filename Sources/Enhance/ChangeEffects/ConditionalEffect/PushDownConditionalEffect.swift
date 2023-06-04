@@ -37,9 +37,11 @@ public extension ConditionalEffect where Self == PushDownConditionalEffect {
 struct PushDown_Previews: PreviewProvider {
 
     struct PushDownButtonStyle: ButtonStyle {
+        @Environment(\.isEnabled) var isEnabled
+
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
-                .font(.body.bold())
+                .font(.body.weight(.semibold))
                 .foregroundStyle(.white)
                 .padding(.vertical, 12)
                 .padding(.horizontal, 64)
@@ -47,13 +49,19 @@ struct PushDown_Previews: PreviewProvider {
                 .opacity(configuration.isPressed ? 0.75 : 1)
                 .conditionalEffect(.pushDown, condition: configuration.isPressed)
                 .changeEffect(.feedbackHapticSelection, value: configuration.isPressed)
+                .changeEffect(.shimmer, value: isEnabled, isEnabled: isEnabled)
+                .animation(.easeInOut, value: isEnabled)
         }
     }
 
     static var previews: some View {
-        Button(action: { }) {
-            Label("Checkout", systemImage: "cart")
+        ChangeEffectPreview(fireFrequency: 5) { $date in
+            let enable = Int(date.timeIntervalSinceReferenceDate) % 2 == 0
+            Button(action: { }) {
+                Label("Checkout", systemImage: "cart")
+            }
+            .buttonStyle(PushDownButtonStyle())
+            .disabled(!enable)
         }
-        .buttonStyle(PushDownButtonStyle())
     }
 }

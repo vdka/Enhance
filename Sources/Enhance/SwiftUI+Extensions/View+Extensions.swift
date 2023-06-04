@@ -1,7 +1,7 @@
 
 import SwiftUI
 
-extension View {
+public extension View {
     /// - SeeAlso: https://fivestars.blog/articles/reverse-masks-how-to
     @inlinable
     func inverseMask(alignment: Alignment = .center, @ViewBuilder _ mask: () -> some View) -> some View {
