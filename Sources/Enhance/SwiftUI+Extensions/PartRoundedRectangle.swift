@@ -3,19 +3,33 @@ import SwiftUI
 
 public extension View {
     func cornerRadius(_ radius: CGFloat, corners: PartRoundedRectangle.Corners) -> some View {
-        clipShape(PartRoundedRectangle(radius: radius, corners: corners))
+        // In order to read layoutDirection we use a ViewModifier as Shape cannot read from the Environment
+        let modifier = PartRoundedRectangleModifier(radius: radius, corners: corners)
+        return self.modifier(modifier)
+    }
+}
+
+struct PartRoundedRectangleModifier: ViewModifier {
+    let radius: CGFloat
+    let corners: PartRoundedRectangle.Corners
+
+    @Environment(\.layoutDirection) var layoutDirection
+
+    func body(content: Content) -> some View {
+        content.clipShape(PartRoundedRectangle(radius: radius, corners: corners, layoutDirection: layoutDirection))
     }
 }
 
 public struct PartRoundedRectangle: Shape {
-    public var radius: CGFloat = .infinity
-    public var corners: Corners = .all
+    public var radius: CGFloat
+    public var corners: Corners
 
-    @Environment(\.layoutDirection) var layoutDirection
+    public var layoutDirection: LayoutDirection
 
-    public init(radius: CGFloat, corners: Corners) {
+    public init(radius: CGFloat, corners: Corners, layoutDirection: LayoutDirection = .leftToRight) {
         self.radius = radius
         self.corners = corners
+        self.layoutDirection = layoutDirection
     }
 
     public func path(in rect: CGRect) -> Path {
@@ -37,7 +51,6 @@ public struct PartRoundedRectangle: Shape {
                 var botRight = corner.contains(.bottomRight)
                 swap(&topLeft, &topRight)
                 swap(&botLeft, &botRight)
-
                 corner = []
                 corner.formUnion(topLeft ? .topLeft : [])
                 corner.formUnion(topRight ? .topRight : [])
@@ -76,5 +89,14 @@ public struct PartRoundedRectangle: Shape {
         public static var all: Self { [.topLeft, .topRight, .bottomLeft, .bottomRight] }
 
         internal static var respectsLayoutDirectionFlag = Self(rawValue: 0b1 << 5)
+    }
+}
+
+struct PartRoundedRectangle_Previews: PreviewProvider {
+
+    static var previews: some View {
+        Rectangle().fill(.red).frame(width: 30, height: 30)
+            .cornerRadius(8, corners: .leading)
+            .environment(\.layoutDirection, .rightToLeft)
     }
 }
