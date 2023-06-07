@@ -1,0 +1,2 @@
+- [ ] Shimmer Effect prevents interaction
+  - Due to GradientMask?

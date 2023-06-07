@@ -6,7 +6,7 @@ import UIKit
 
 public struct SelectionFeedbackChangeEffect: ChangeEffect {
     public var delay: TimeInterval { 0 }
-    public var cooldown: TimeInterval = 3
+    public var cooldown: TimeInterval = 0
     public var defaultAnimation: Animation? { nil }
 
     public var generator = UISelectionFeedbackGenerator()
@@ -38,7 +38,7 @@ public extension ChangeEffect where Self == SelectionFeedbackChangeEffect {
 
 public struct ImpactFeedbackChangeEffect: ChangeEffect {
     public var delay: TimeInterval { 0 }
-    public var cooldown: TimeInterval = 3
+    public var cooldown: TimeInterval = 0
     public var defaultAnimation: Animation? { nil }
 
     public var intensity: CGFloat?
@@ -99,7 +99,7 @@ public extension ChangeEffect where Self == ImpactFeedbackChangeEffect {
 
 public struct NotificationFeedbackChangeEffect: ChangeEffect {
     public var delay: TimeInterval { 0 }
-    public var cooldown: TimeInterval = 3
+    public var cooldown: TimeInterval = 0
     public var defaultAnimation: Animation? { nil }
 
     public var type: UINotificationFeedbackGenerator.FeedbackType
