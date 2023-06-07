@@ -3,7 +3,7 @@ import SwiftUI
 
 public struct ShakeChangeEffect: ChangeEffect {
     public var delay: TimeInterval = 0
-    public var cooldown: TimeInterval = 3
+    public var cooldown: TimeInterval = 0
     public var defaultAnimation: Animation? = .easeInOut(duration: 1.5)
 
     public var amount: CGFloat = 5

@@ -3,7 +3,7 @@ import SwiftUI
 
 public struct JumpChangeEffect: ChangeEffect {
     public var delay: TimeInterval = 0
-    public var cooldown: TimeInterval = 3
+    public var cooldown: TimeInterval = 0
     public var defaultAnimation: Animation? = .easeInBack
 
     public var height: CGFloat

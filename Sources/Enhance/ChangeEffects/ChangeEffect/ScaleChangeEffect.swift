@@ -3,7 +3,7 @@ import SwiftUI
 
 public struct ScaleChangeEffect: ChangeEffect {
     public var delay: TimeInterval = 0
-    public var cooldown: TimeInterval = 3
+    public var cooldown: TimeInterval = 0
     public var defaultAnimation: Animation? = .easeInOut
 
     public var amount: CGFloat
