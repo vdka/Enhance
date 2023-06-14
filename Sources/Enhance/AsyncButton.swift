@@ -6,7 +6,7 @@ import SwiftUI
 public struct AsyncButton<Label: View>: View {
     public var actionOptions = Set(ActionOption.allCases)
     public var role: ButtonRole? = nil
-    public var action: @MainActor () async -> Void
+    public var action: () async -> Void
     @ViewBuilder public var label: () -> Label
 
     @State public var isDisabled = false
@@ -15,8 +15,8 @@ public struct AsyncButton<Label: View>: View {
     public init(
         actionOptions: Set<ActionOption> = Set(ActionOption.allCases),
         role: ButtonRole? = nil,
-        action: @escaping @MainActor () async -> Void,
-        label: @escaping () -> Label
+        action: @escaping () async -> Void,
+        @ViewBuilder label: @escaping () -> Label
     ) {
         self.actionOptions = actionOptions
         self.role = role
@@ -34,7 +34,7 @@ public struct AsyncButton<Label: View>: View {
                 var progressViewTask: Task<Void, Error>?
 
                 if actionOptions.contains(.showProgressView) {
-                    progressViewTask = Task { @MainActor in
+                    progressViewTask = Task {
                         try await Task.sleepThrowingOnCancellation(seconds: 0.15) // Display progress view only after 0.15 seconds
                         showProgressView = true
                     }
@@ -63,7 +63,6 @@ public struct AsyncButton<Label: View>: View {
 }
 
 public extension AsyncButton {
-
     enum ActionOption: CaseIterable {
         case disableButton
         case showProgressView
