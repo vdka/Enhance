@@ -4,7 +4,7 @@ import SwiftUI
 public struct PushDownConditionalEffect: ConditionalEffect {
 
     public var delay: TimeInterval = 0
-    public var defaultAnimation: Animation? = .bouncy
+    public var defaultAnimation: Animation? = Animation.snappy(duration: 0.2).delay(0.05)
 
     public init() { }
 
@@ -50,12 +50,12 @@ struct PushDown_Previews: PreviewProvider {
                 .conditionalEffect(.pushDown, condition: configuration.isPressed)
                 .changeEffect(.feedbackHapticSelection, value: configuration.isPressed)
                 .changeEffect(.shimmer, value: isEnabled, isEnabled: isEnabled)
-                .animation(.easeInOut, value: isEnabled)
+                .animation(.smooth, value: isEnabled)
         }
     }
 
     static var previews: some View {
-        ChangeEffectPreview(fireFrequency: 5) { $date in
+        ChangeEffectPreview(fireFrequency: 3) { $date in
             let enable = Int(date.timeIntervalSinceReferenceDate) % 2 == 0
             Button(action: { }) {
                 Label("Checkout", systemImage: "cart")

@@ -2,9 +2,9 @@
 import SwiftUI
 
 public struct ShimmerChangeEffect: ChangeEffect {
-    public var delay: TimeInterval = 0
-    public var cooldown: TimeInterval = 3
-    public var defaultAnimation: Animation? = .easeInOut(duration: 2.5)
+    public var delay: TimeInterval = 0.25
+    public var cooldown: TimeInterval = 0.5
+    public var defaultAnimation: Animation? = .easeInOut(duration: 1)
 
     public func modifier(count: Int) -> some ViewModifier {
         AnimatedMask(animatableData: CGFloat(count))
@@ -23,7 +23,6 @@ public struct ShimmerChangeEffect: ChangeEffect {
 
     struct GradientMask: View {
         let phase: CGFloat
-        let centerColor = Color.black
 
         @Environment(\.layoutDirection) var layoutDirection
 
@@ -32,9 +31,10 @@ public struct ShimmerChangeEffect: ChangeEffect {
 
             GeometryReader { geometry in
                 let gradient = Gradient(stops: [
-                    .init(color: .clear, location: phase + 0.0),
-                    .init(color: .white, location: phase + 0.1),
-                    .init(color: .clear, location: phase + 0.2),
+                    .init(color: .clear, location: phase - 0.10),
+                    .init(color: .white, location: phase - 0.05),
+                    .init(color: .white, location: phase + 0.05),
+                    .init(color: .clear, location: phase + 0.10),
                 ])
                 LinearGradient(
                     gradient: gradient,
@@ -54,10 +54,11 @@ public extension ChangeEffect where Self == ShimmerChangeEffect {
 
 struct Shimmer_Previews: PreviewProvider {
     static var previews: some View {
-        ChangeEffectPreview { $date in
+        ChangeEffectPreview(fireFrequency: 1.6) { $date in
             Button(action: { date = .now }) {
                 Label("Checkout", systemImage: "cart")
             }
+            .controlSize(.large)
             .buttonStyle(.borderedProminent)
             .changeEffect(.shimmer, value: date)
         }

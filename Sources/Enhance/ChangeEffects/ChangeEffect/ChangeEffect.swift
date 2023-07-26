@@ -2,7 +2,7 @@
 import SwiftUI
 import Combine
 
-public protocol ChangeEffect {
+public protocol ChangeEffect<ResolvedModifier> {
     associatedtype ResolvedModifier: ViewModifier
 
     var delay: TimeInterval { get }
@@ -30,11 +30,11 @@ public extension View {
      - SeeAlso: ``ChangeEffect``
      */
     func changeEffect(_ effect: some ChangeEffect, value: some Equatable, isEnabled: Bool = true, animation: Animation? = nil) -> some View {
-        let modifier = ChangeEffectModifier(value: value, effect: effect, isEnabled: isEnabled)
-            .transaction { transaction in
-                transaction.animation = animation ?? effect.defaultAnimation ?? transaction.animation
-                transaction.animation = transaction.animation?.delay(effect.delay)
-            }
+        var animation = animation ?? effect.defaultAnimation
+        if !effect.delay.isZero {
+            animation = animation?.delay(effect.delay)
+        }
+        let modifier = ChangeEffectModifier(value: value, effect: effect, isEnabled: isEnabled, animation: animation)
         return self.modifier(modifier)
     }
 }
@@ -43,15 +43,17 @@ struct ChangeEffectModifier<Value: Equatable, Effect: ChangeEffect>: ViewModifie
     let value: Value
     let effect: Effect
     let isEnabled: Bool
+    let animation: Animation?
 
     @State var stateValue: Value
     @State var changeCount: Int = 0
     @State var lastFired: Date = .distantPast
 
-    init(value: Value, effect: Effect, isEnabled: Bool) {
+    init(value: Value, effect: Effect, isEnabled: Bool, animation: Animation?) {
         self.value = value
         self.effect = effect
         self.isEnabled = isEnabled
+        self.animation = animation
         self._stateValue = State(initialValue: value)
     }
 
@@ -61,11 +63,12 @@ struct ChangeEffectModifier<Value: Equatable, Effect: ChangeEffect>: ViewModifie
             .onChange(of: value) { stateValue = $0 } // By doing this we can access the oldValue in our onChange
             .onChange(of: stateValue) { [oldValue = stateValue] newValue in
                 guard isEnabled, oldValue != newValue else { return }
-                if Date.now.timeIntervalSince(lastFired) < effect.cooldown {
-                    return
+                guard Date.now.timeIntervalSince(lastFired) >= effect.cooldown else { return }
+                let transaction = Transaction(animation: animation)
+                withTransaction(transaction) {
+                    lastFired = .now
+                    changeCount &+= 1
                 }
-                lastFired = .now
-                changeCount &+= 1
             }
     }
 }
@@ -88,7 +91,7 @@ struct ChangeEffectPreview<Content: View>: View {
             TimelineView(.animation) { tl in
                 let seconds = value.addingTimeInterval(fireFrequency).timeIntervalSince(tl.date)
                 if #available(iOS 16, *) {
-                    Text("Fires in \(seconds, format: .number.precision(.fractionLength(2))) seconds").contentTransition(.numericText(countsDown: true))
+                    Text("Fires in \(seconds, format: .number.precision(.fractionLength(1))) seconds").contentTransition(.numericText(countsDown: true))
                         .foregroundColor(seconds < (5 / 60) ? .green : .primary)
                 } else {
                     Text("Fires in \(seconds) seconds")
