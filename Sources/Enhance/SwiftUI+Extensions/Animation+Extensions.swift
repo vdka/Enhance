@@ -32,24 +32,4 @@ public extension Animation {
     static func easeInBack(duration: Double) -> Animation { .timingCurve(0.36, 0, 0.66, -0.56, duration: duration) }
     static func easeOutBack(duration: Double) -> Animation { .timingCurve(0.34, 1.56, 0.64, 1, duration: duration) }
     static func easeInOutBack(duration: Double) -> Animation { .timingCurve(0.68, -0.6, 0.32, 1.6, duration: duration) }
-
-    // MARK: - Xcode 14 support
-    /** NOTE: The backport here is a little interesting since the animations themselves are backported to iOS 13. But what we are doing here
-     while referred to as backporting, is actually different, as the symbols are not available to Xcode 14 we are backporting the symbols
-     */
-
-    @_disfavoredOverload static var bouncy: Animation { .interactiveSpring(response: 0.5, dampingFraction: 0.7, blendDuration: 0.0) }
-    @_disfavoredOverload static func bouncy(duration: TimeInterval) -> Animation {
-        .interactiveSpring(response: duration, dampingFraction: 0.7, blendDuration: 0.0)
-    }
-
-    @_disfavoredOverload static var snappy: Animation { .interactiveSpring(response: 0.5, dampingFraction: 0.85, blendDuration: 0.0) }
-    @_disfavoredOverload static func snappy(duration: TimeInterval) -> Animation {
-        .interactiveSpring(response: duration, dampingFraction: 0.85, blendDuration: 0.0)
-    }
-
-    @_disfavoredOverload static var smooth: Animation { .interactiveSpring(response: 0.5, dampingFraction: 1.0, blendDuration: 0.0) }
-    @_disfavoredOverload static func smooth(duration: TimeInterval) -> Animation {
-        .interactiveSpring(response: duration, dampingFraction: 1.0, blendDuration: 0.0)
-    }
 }
