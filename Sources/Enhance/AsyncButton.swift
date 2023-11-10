@@ -6,20 +6,25 @@ import SwiftUI
 public struct AsyncButton<Label: View>: View {
     public var actionOptions = Set(ActionOption.allCases)
     public var role: ButtonRole? = nil
-    public var action: () async -> Void
+    public var errorTitle: String? = nil
+    public var action: () async throws -> Void
     @ViewBuilder public var label: () -> Label
 
     @State public var isDisabled = false
     @State public var showProgressView = false
 
+    @Environment(\.handleError) var handleError
+
     public init(
         actionOptions: Set<ActionOption> = Set(ActionOption.allCases),
         role: ButtonRole? = nil,
-        action: @escaping () async -> Void,
+        errorTitle: String? = nil,
+        action: @escaping () async throws -> Void,
         @ViewBuilder label: @escaping () -> Label
     ) {
         self.actionOptions = actionOptions
         self.role = role
+        self.errorTitle = errorTitle
         self.action = action
         self.label = label
     }
@@ -40,7 +45,11 @@ public struct AsyncButton<Label: View>: View {
                     }
                 }
 
-                await action()
+                do {
+                    try await action()
+                } catch {
+                    handleError(title: errorTitle, error)
+                }
                 progressViewTask?.cancel()
 
                 isDisabled = false
@@ -60,6 +69,12 @@ public struct AsyncButton<Label: View>: View {
         .animation(.easeInOutBack, value: showProgressView)
         .disabled(isDisabled)
     }
+
+    public func withErrorTitle(_ title: String) -> Self {
+        var it = self
+        it.errorTitle = title
+        return it
+    }
 }
 
 public extension AsyncButton {
@@ -70,14 +85,14 @@ public extension AsyncButton {
 }
 
 public extension AsyncButton where Label == Text {
-    init(_ label: LocalizedStringKey, role: ButtonRole? = nil, action: @escaping () async -> Void) {
+    init(_ label: LocalizedStringKey, role: ButtonRole? = nil, action: @escaping () async throws -> Void) {
         self.init(role: role, action: action) {
             Text(label)
         }
     }
 
     @_disfavoredOverload
-    init(_ label: some StringProtocol, role: ButtonRole? = nil, action: @escaping () async -> Void) {
+    init(_ label: some StringProtocol, role: ButtonRole? = nil, action: @escaping () async throws -> Void) {
         self.init(role: role, action: action) {
             Text(label)
         }
@@ -85,7 +100,7 @@ public extension AsyncButton where Label == Text {
 }
 
 public extension AsyncButton where Label == Image {
-    init(systemImage: String, role: ButtonRole? = nil, action: @escaping () async -> Void) {
+    init(systemImage: String, role: ButtonRole? = nil, action: @escaping () async throws -> Void) {
         self.init(role: role, action: action) {
             Image(systemName: systemImage)
         }
@@ -93,20 +108,20 @@ public extension AsyncButton where Label == Image {
 }
 
 public extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
-    init(_ label: LocalizedStringKey, systemImage: String, role: ButtonRole? = nil, action: @escaping () async -> Void) {
+    init(_ label: LocalizedStringKey, systemImage: String, role: ButtonRole? = nil, action: @escaping () async throws -> Void) {
         self.init(role: role, action: action) {
             SwiftUI.Label(label, systemImage: systemImage)
         }
     }
 
     @_disfavoredOverload
-    init(_ label: some StringProtocol, systemImage: String, role: ButtonRole? = nil, action: @escaping () async -> Void) {
+    init(_ label: some StringProtocol, systemImage: String, role: ButtonRole? = nil, action: @escaping () async throws -> Void) {
         self.init(role: role, action: action) {
             SwiftUI.Label(label, systemImage: systemImage)
         }
     }
 
-    init(verbatim title: some StringProtocol, systemImage: String, role: ButtonRole? = nil, action: @escaping () async -> Void) {
+    init(verbatim title: some StringProtocol, systemImage: String, role: ButtonRole? = nil, action: @escaping () async throws -> Void) {
         self.init(role: role, action: action) {
             SwiftUI.Label(verbatim: title, systemImage: systemImage)
         }
@@ -114,7 +129,7 @@ public extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
 }
 
 public extension AsyncButton where Label == Text {
-    init(verbatim title: some StringProtocol, role: ButtonRole? = nil, action: @escaping () async -> Void) {
+    init(verbatim title: some StringProtocol, role: ButtonRole? = nil, action: @escaping () async throws -> Void) {
         self.init(role: role, action: action) {
             Text(title)
         }
