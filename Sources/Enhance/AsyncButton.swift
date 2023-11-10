@@ -4,7 +4,7 @@ import SwiftUI
 // See: https://www.swiftbysundell.com/articles/building-an-async-swiftui-button
 
 public struct AsyncButton<Label: View>: View {
-    public var actionOptions = Set(ActionOption.allCases)
+    public var options = Set(AsyncButtonOption.allCases)
     public var role: ButtonRole? = nil
     public var action: () async -> Void
     @ViewBuilder public var label: () -> Label
@@ -13,12 +13,12 @@ public struct AsyncButton<Label: View>: View {
     @State public var showProgressView = false
 
     public init(
-        actionOptions: Set<ActionOption> = Set(ActionOption.allCases),
+        options: Set<AsyncButtonOption> = Set(AsyncButtonOption.allCases),
         role: ButtonRole? = nil,
         action: @escaping () async -> Void,
         @ViewBuilder label: @escaping () -> Label
     ) {
-        self.actionOptions = actionOptions
+        self.options = options
         self.role = role
         self.action = action
         self.label = label
@@ -26,14 +26,14 @@ public struct AsyncButton<Label: View>: View {
 
     public var body: some View {
         Button(role: role) {
-            if actionOptions.contains(.disableButton) {
+            if options.contains(.disableButton) {
                 isDisabled = true
             }
 
             Task {
                 var progressViewTask: Task<Void, Error>?
 
-                if actionOptions.contains(.showProgressView) {
+                if options.contains(.showProgressView) {
                     progressViewTask = Task {
                         try await Task.sleepThrowingOnCancellation(seconds: 0.15) // Display progress view only after 0.15 seconds
                         showProgressView = true
@@ -62,11 +62,9 @@ public struct AsyncButton<Label: View>: View {
     }
 }
 
-public extension AsyncButton {
-    enum ActionOption: CaseIterable {
-        case disableButton
-        case showProgressView
-    }
+public enum AsyncButtonOption: CaseIterable {
+    case disableButton
+    case showProgressView
 }
 
 public extension AsyncButton where Label == Text {
