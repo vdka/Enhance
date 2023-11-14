@@ -4,22 +4,28 @@ import SwiftUI
 // See: https://www.swiftbysundell.com/articles/building-an-async-swiftui-button
 
 public struct AsyncButton<Label: View>: View {
-    public var options = Set(AsyncButtonOption.allCases)
+    public var options: AsyncButtonOption = AsyncButtonOption.all
     public var role: ButtonRole? = nil
-    public var action: () async -> Void
+    public var errorTitle: String?
+    public var action: () async throws -> Void
     @ViewBuilder public var label: () -> Label
 
     @State public var isDisabled = false
     @State public var showProgressView = false
+    @State public var error: Error?
+
+    @Environment(\.handleError) var handleError
 
     public init(
-        options: Set<AsyncButtonOption> = Set(AsyncButtonOption.allCases),
+        options: AsyncButtonOption = .all,
         role: ButtonRole? = nil,
-        action: @escaping () async -> Void,
+        errorTitle: String? = nil,
+        action: @escaping () async throws -> Void,
         @ViewBuilder label: @escaping () -> Label
     ) {
         self.options = options
         self.role = role
+        self.errorTitle = errorTitle
         self.action = action
         self.label = label
     }
@@ -40,14 +46,24 @@ public struct AsyncButton<Label: View>: View {
                     }
                 }
 
-                await action()
+                do {
+                    try await action()
+                } catch {
+                    self.error = error
+                    handleError(title: errorTitle, error)
+                    await Task.sleep(seconds: 0.5)
+                    self.error = nil
+                }
                 progressViewTask?.cancel()
 
                 isDisabled = false
                 showProgressView = false
             }
         } label: {
-            if showProgressView {
+            if error != nil {
+                Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if showProgressView {
                 ZStack {
                     ProgressView()
                     label().opacity(0)
@@ -58,70 +74,148 @@ public struct AsyncButton<Label: View>: View {
             }
         }
         .animation(.easeInOutBack, value: showProgressView)
-        .disabled(isDisabled)
+        .animation(.easeInOutBack, value: error != nil)
+        .disabled(isDisabled || error != nil)
+    }
+
+    func withErrorTitle(_ title: String) -> Self {
+        var copy = self
+        copy.errorTitle = title
+        return copy
     }
 }
 
-public enum AsyncButtonOption: CaseIterable {
-    case disableButton
-    case showProgressView
+public struct AsyncButtonOption: OptionSet {
+    public var rawValue: Int
+    public init(rawValue: Int) { self.rawValue = rawValue }
+
+    public static let disableButton     = AsyncButtonOption(rawValue: 0b0001)
+    public static let showProgressView  = AsyncButtonOption(rawValue: 0b0010)
+    public static let titleAsErrorTitle = AsyncButtonOption(rawValue: 0b0100)
+
+    public static let all = AsyncButtonOption(rawValue: ~0)
 }
 
 public extension AsyncButton where Label == Text {
-    init(_ label: LocalizedStringKey, role: ButtonRole? = nil, action: @escaping () async -> Void) {
-        self.init(role: role, action: action) {
-            Text(label)
+    init(
+        _ title: LocalizedStringKey,
+        role: ButtonRole? = nil,
+        options: AsyncButtonOption = .all,
+        action: @escaping () async throws -> Void
+    ) {
+        self.init(options: options, role: role, action: action) {
+            Text(title)
+        }
+        if let key = title.key, key.contains("%") == false {
+            self.errorTitle = String(localized: "\(key) Failed")
         }
     }
 
     @_disfavoredOverload
-    init(_ label: some StringProtocol, role: ButtonRole? = nil, action: @escaping () async -> Void) {
-        self.init(role: role, action: action) {
-            Text(label)
+    init(
+        _ title: some StringProtocol,
+        role: ButtonRole? = nil,
+        options: AsyncButtonOption = .all,
+        action: @escaping () async throws -> Void
+    ) {
+        self.init(options: options, role: role, action: action) {
+            Text(title)
         }
+        self.errorTitle = String(localized: "\(String(title)) Failed")
     }
 }
 
 public extension AsyncButton where Label == Image {
-    init(systemImage: String, role: ButtonRole? = nil, action: @escaping () async -> Void) {
-        self.init(role: role, action: action) {
+    init(
+        systemImage: String,
+        role: ButtonRole? = nil,
+        options: AsyncButtonOption = .all,
+        action: @escaping () async throws -> Void
+    ) {
+        self.init(options: options, role: role, action: action) {
             Image(systemName: systemImage)
         }
     }
 }
 
 public extension AsyncButton where Label == SwiftUI.Label<Text, Image> {
-    init(_ label: LocalizedStringKey, systemImage: String, role: ButtonRole? = nil, action: @escaping () async -> Void) {
-        self.init(role: role, action: action) {
-            SwiftUI.Label(label, systemImage: systemImage)
+    init(
+        _ title: LocalizedStringKey,
+        systemImage: String,
+        role: ButtonRole? = nil,
+        options: AsyncButtonOption = .all,
+        action: @escaping () async throws -> Void
+    ) {
+        self.init(options: options, role: role, action: action) {
+            SwiftUI.Label(title, systemImage: systemImage)
+        }
+        if let key = title.key, key.contains("%") == false {
+            self.errorTitle = String(localized: "\(key) Failed")
         }
     }
 
     @_disfavoredOverload
-    init(_ label: some StringProtocol, systemImage: String, role: ButtonRole? = nil, action: @escaping () async -> Void) {
-        self.init(role: role, action: action) {
-            SwiftUI.Label(label, systemImage: systemImage)
+    init(
+        _ title: some StringProtocol,
+        systemImage: String,
+        role: ButtonRole? = nil,
+        options: AsyncButtonOption = .all,
+        action: @escaping () async throws -> Void
+    ) {
+        self.init(options: options, role: role, action: action) {
+            SwiftUI.Label(title, systemImage: systemImage)
         }
+        self.errorTitle = String(localized: "\(String(title)) Failed")
     }
 
-    init(verbatim title: some StringProtocol, systemImage: String, role: ButtonRole? = nil, action: @escaping () async -> Void) {
-        self.init(role: role, action: action) {
+    init(
+        verbatim title: some StringProtocol,
+        systemImage: String,
+        role: ButtonRole? = nil,
+        options: AsyncButtonOption = .all,
+        action: @escaping () async throws -> Void
+    ) {
+        self.init(options: options, role: role, action: action) {
             SwiftUI.Label(verbatim: title, systemImage: systemImage)
         }
+        self.errorTitle = String(localized: "\(String(title)) Failed")
     }
 }
 
 public extension AsyncButton where Label == Text {
-    init(verbatim title: some StringProtocol, role: ButtonRole? = nil, action: @escaping () async -> Void) {
-        self.init(role: role, action: action) {
+    init(
+        verbatim title: some StringProtocol,
+        role: ButtonRole? = nil,
+        options: AsyncButtonOption = .all,
+        action: @escaping () async throws -> Void
+    ) {
+        self.init(options: options, role: role, action: action) {
             Text(title)
         }
+        self.errorTitle = String(localized: "\(String(title)) Failed")
     }
 }
 
 struct AsyncButton_Previews: PreviewProvider {
     static var previews: some View {
-        AsyncButton("Cancel", action: { await Task.sleep(seconds: 1) })
-            .buttonStyle(.bordered)
+        AsyncButton("Cancel", action: {
+            await Task.sleep(seconds: 1)
+            throw Error.error
+        })
+        .buttonStyle(.bordered)
+        .handleError(using: { print($0 ?? "nil", $1) })
+    }
+
+    private enum Error: Swift.Error {
+        case error
+    }
+}
+
+private extension LocalizedStringKey {
+    var key: String? {
+        Mirror(reflecting: self)
+            .children
+            .first(where: { $0.label?.hasSuffix("key") == true })?
+            .value as? String
     }
 }
