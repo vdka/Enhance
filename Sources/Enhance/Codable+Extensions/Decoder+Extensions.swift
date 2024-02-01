@@ -48,92 +48,84 @@ public extension Decoder {
 
 // MARK: - Specialized Decoders
 
+public extension SingleValueDecodingContainer {
+
+    func decode(using formatter: some AnyDateFormatter, allowFallbacks: Bool = true) throws -> Date {
+        let rawString = try decode(String.self)
+        if let date = formatter.date(from: rawString) {
+            return date
+        } else if !allowFallbacks {
+            throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unable to parse date string: \(rawString)")
+        }
+        log["decoding"].warning("Formatter specified for \(#function) failed. Will attempt to decode using `dateDecodingFallbackFormatters`")
+        guard let date = dateDecodingFallbackFormatters.compactMap({ $0.date(from: rawString) }).lazy.first else {
+            throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unable to parse date string: \(rawString)")
+        }
+        return date
+    }
+}
+
+public extension UnkeyedDecodingContainer {
+
+    mutating func decode(using formatter: some AnyDateFormatter, allowFallbacks: Bool = true) throws -> Date {
+        let rawString = try decode(String.self)
+        if let date = formatter.date(from: rawString) {
+            return date
+        } else if !allowFallbacks {
+            throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unable to parse date string: \(rawString)")
+        }
+        log["decoding"].warning("Formatter specified for \(#function) failed. Will attempt to decode using `dateDecodingFallbackFormatters`")
+        guard let date = dateDecodingFallbackFormatters.compactMap({ $0.date(from: rawString) }).lazy.first else {
+            throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unable to parse date string: \(rawString)")
+        }
+        return date
+    }
+}
+
+public extension KeyedDecodingContainer {
+
+    func decode(_ key: Key, using formatter: some AnyDateFormatter, allowFallbacks: Bool = true) throws -> Date {
+        let rawString = try decode(String.self, forKey: key)
+        if let date = formatter.date(from: rawString) {
+            return date
+        } else if !allowFallbacks {
+            throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "Unable to parse date string: \(rawString)")
+        }
+        log["decoding"].warning("Formatter specified for \(#function) failed. Will attempt to decode using `dateDecodingFallbackFormatters`")
+        guard let date = dateDecodingFallbackFormatters.compactMap({ $0.date(from: rawString) }).lazy.first else {
+            throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "Unable to parse date string: \(rawString)")
+        }
+        return date
+    }
+}
+
+// MARK: - Date Decoders with Fallback logic
+
 public extension Decoder {
 
-    func decode(using formatter: some AnyDateFormatter) throws -> Date {
+    func decode(using formatter: some AnyDateFormatter, allowFallbacks: Bool = true) throws -> Date {
         let container = try singleValueContainer()
-        let rawString = try container.decode(String.self)
-        guard let date = formatter.date(from: rawString) else {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to parse date string")
-        }
-        return date
+        return try container.decode(using: formatter, allowFallbacks: allowFallbacks)
     }
 
-    /// Decode a date from a string for a given key (specified as a `CodingKey`), using a specific
-    /// formatter.
-    func decode(_ key: some CodingKey, using formatter: some AnyDateFormatter) throws -> Date {
+    func decode(_ key: some CodingKey, using formatter: some AnyDateFormatter, allowFallbacks: Bool = true) throws -> Date {
         let container = try self.container(keyedBy: type(of: key))
-        let rawString = try container.decode(String.self, forKey: key)
-
-        guard let date = formatter.date(from: rawString) else {
-            throw DecodingError.dataCorruptedError(forKey: key, in: container, debugDescription: "Unable to parse date string")
-        }
-
-        return date
+        return try container.decode(key, using: formatter, allowFallbacks: allowFallbacks)
     }
 
-    /// Decode an optional date from a string for a given key (specified as a `CodingKey`), using
-    /// a specific formatter.
-    /// - Throws: If specified key exists and is not-null and decode fails.
-    func decodeIfPresent(_ key: some CodingKey, using formatter: some AnyDateFormatter) throws -> Date? {
+    func decodeIfPresent(_ key: some CodingKey, using formatter: some AnyDateFormatter, allowFallbacks: Bool = true) throws -> Date? {
+        let container = try self.container(keyedBy: type(of: key))
         do {
-            return try decode(key, using: formatter)
+            return try container.decode(key, using: formatter, allowFallbacks: allowFallbacks)
         } catch {
             return try throwIfNotEmpty(error: error)
         }
     }
+}
 
-    /// Decode a date from a string allowing multiple formats to succeed. See the global variable
-    /// `dateParsersToTryForDecoding` for formats, or pass your own format string in `tryFirst`
-    /// to run a custom format first, falling back to the global should it fail.
-    func decode(_ key: some CodingKey, allowFallbackFormats: Bool, tryFirst format: String? = nil) throws -> Date {
-        guard allowFallbackFormats else { return try decode(key) }
+// MARK: - Specialized Number Parsers
 
-        let container = try self.container(keyedBy: type(of: key))
-        // TODO: Handle numeric epochs
-        let rawString: String
-        do {
-            rawString = try container.decode(String.self, forKey: key)
-        } catch {
-            let epochOffset = try container.decode(Double.self, forKey: key)
-            return Date(timeIntervalSince1970: epochOffset)
-        }
-
-        var dateFormatsToTry = dateFormattersToTryForDecoding
-        if let format {
-            let formatter = DateFormatter(format: format)
-            dateFormatsToTry.insert(formatter, at: 0)
-        }
-
-        let date = dateFormatsToTry
-            .compactMap { $0.date(from: rawString) }
-            .lazy
-            .first
-
-        guard let date else {
-            throw DecodingError.dataCorruptedError(
-                forKey: key,
-                in: container,
-                debugDescription: "Unable to parse date string: \(rawString), tried \(dateFormatsToTry.count) formats unsuccessfully"
-            )
-        }
-
-        return date
-    }
-
-    /// Decode an optional date from a string allowing multiple formats to succeed. See the global
-    ///  variable `dateParsersToTryForDecoding` for formats, or pass your own format string in
-    /// `tryFirst` to run a custom format first, falling back to the global should it fail.
-    /// - Throws: If specified key exists and is not-null and decode fails.
-    func decodeIfPresent(_ key: some CodingKey, allowFallbackFormats: Bool, tryFirst format: String? = nil) throws -> Date? {
-        do {
-            return try decode(key, allowFallbackFormats: allowFallbackFormats, tryFirst: format)
-        } catch {
-            return try throwIfNotEmpty(error: error)
-        }
-    }
-
-    // MARK: - Specialized Number Parsers
+public extension Decoder {
 
     func decode(_ key: some CodingKey, parseStrings: Bool, using formatter: NumberFormatter = .server) throws -> Double {
         let container = try self.container(keyedBy: type(of: key))
@@ -185,9 +177,16 @@ public extension JSONDecoder.DateDecodingStrategy {
             try decoder.decode(using: .iso8601(options: options))
         }
     }
+
+    /// This strategy will try multiple formats and makes your decoders more resilient to changes on API's
+    static func fallback(tryFirst: any AnyDateFormatter) -> JSONDecoder.DateDecodingStrategy {
+        .custom { decoder in
+            try decoder.decode(using: tryFirst, allowFallbacks: true)
+        }
+    }
 }
 
-public var dateFormattersToTryForDecoding: [AnyDateFormatter] = [
+public var dateDecodingFallbackFormatters: [AnyDateFormatter] = [
     ISO8601DateFormatter(),
     ISO8601DateFormatter(withOptions: .withFractionalSeconds),
     ISO8601DateFormatter(withOptions: .withTimeZone),
