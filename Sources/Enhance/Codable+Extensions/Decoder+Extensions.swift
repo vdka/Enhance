@@ -169,6 +169,13 @@ public protocol AnyDateFormatter {
 extension ISO8601DateFormatter: AnyDateFormatter {}
 extension DateFormatter: AnyDateFormatter {}
 
+extension AnyDateFormatter where Self == ISO8601DateFormatter {
+    static var iso8601: ISO8601DateFormatter { ISO8601DateFormatter() }
+    static func iso8601(options: ISO8601DateFormatter.Options) -> ISO8601DateFormatter {
+        ISO8601DateFormatter(options: options)
+    }
+}
+
 public var dateFormattersToTryForDecoding: [AnyDateFormatter] = [
     ISO8601DateFormatter(),
     ISO8601DateFormatter(options: .withInternetDateTime),
