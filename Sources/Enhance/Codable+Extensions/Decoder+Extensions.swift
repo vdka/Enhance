@@ -9,15 +9,15 @@ public extension Decoder {
     }
 
     /// Decode a value for a given key, specified as a `CodingKey`.
-    func decode<T: Decodable, K: CodingKey>(_ key: K, as type: T.Type = T.self) throws -> T {
-        let container = try self.container(keyedBy: K.self)
+    func decode<T: Decodable>(_ key: some CodingKey, as type: T.Type = T.self) throws -> T {
+        let container = try self.container(keyedBy: Swift.type(of: key))
         return try container.decode(type, forKey: key)
     }
 
     /// Decode an optional value for a given key, specified as a `CodingKey`.
     /// - Throws: If specified key exists and is not-null and decode fails.
-    func decodeIfPresent<T: Decodable, K: CodingKey>(_ key: K, as type: T.Type = T.self) throws -> T? {
-        let container = try self.container(keyedBy: K.self)
+    func decodeIfPresent<T: Decodable>(_ key: some CodingKey, as type: T.Type = T.self) throws -> T? {
+        let container = try self.container(keyedBy: Swift.type(of: key))
         return try container.decodeIfPresent(type, forKey: key)
     }
 }
@@ -50,7 +50,14 @@ public extension Decoder {
 
 public extension Decoder {
 
-    // MARK: Specialized Date Formatters
+    func decode(using formatter: some AnyDateFormatter) throws -> Date {
+        let container = try singleValueContainer()
+        let rawString = try container.decode(String.self)
+        guard let date = formatter.date(from: rawString) else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to parse date string")
+        }
+        return date
+    }
 
     /// Decode a date from a string for a given key (specified as a `CodingKey`), using a specific
     /// formatter.
@@ -59,11 +66,7 @@ public extension Decoder {
         let rawString = try container.decode(String.self, forKey: key)
 
         guard let date = formatter.date(from: rawString) else {
-            throw DecodingError.dataCorruptedError(
-                forKey: key,
-                in: container,
-                debugDescription: "Unable to parse date string"
-            )
+            throw DecodingError.dataCorruptedError(forKey: key, in: container, debugDescription: "Unable to parse date string")
         }
 
         return date
@@ -173,6 +176,14 @@ public extension AnyDateFormatter where Self == ISO8601DateFormatter {
     static var iso8601: ISO8601DateFormatter { ISO8601DateFormatter() }
     static func iso8601(options: ISO8601DateFormatter.Options) -> ISO8601DateFormatter {
         ISO8601DateFormatter(options: options)
+    }
+}
+
+public extension JSONDecoder.DateDecodingStrategy {
+    static func iso8601(options: ISO8601DateFormatter.Options) -> Self {
+        .custom { decoder in
+            try decoder.decode(using: .iso8601(options: options))
+        }
     }
 }
 
