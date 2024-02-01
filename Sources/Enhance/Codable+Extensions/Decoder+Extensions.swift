@@ -189,9 +189,9 @@ public extension JSONDecoder.DateDecodingStrategy {
 
 public var dateFormattersToTryForDecoding: [AnyDateFormatter] = [
     ISO8601DateFormatter(),
-    ISO8601DateFormatter(withOptions: .withInternetDateTime),
     ISO8601DateFormatter(withOptions: .withFractionalSeconds),
     ISO8601DateFormatter(withOptions: .withTimeZone),
+    ISO8601DateFormatter(withOptions: [.withFractionalSeconds, .withTimeZone]),
     DateFormatter(format: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"),
     DateFormatter(format: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"),
     DateFormatter(format: "yyyy-MM-dd"),
