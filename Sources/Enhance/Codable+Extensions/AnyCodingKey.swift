@@ -1,5 +1,5 @@
 
-public struct AnyCodingKey: CodingKey {
+public struct AnyCodingKey: CodingKey, ExpressibleByStringLiteral {
     public var stringValue: String
     public var intValue: Int?
 
@@ -15,5 +15,9 @@ public struct AnyCodingKey: CodingKey {
     public init(_ codingKey: any CodingKey) {
         self.intValue = codingKey.intValue
         self.stringValue = codingKey.stringValue
+    }
+
+    public init(stringLiteral value: String) {
+        self.stringValue = value
     }
 }
