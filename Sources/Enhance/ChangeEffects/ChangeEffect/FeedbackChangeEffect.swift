@@ -1,5 +1,6 @@
 
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
 
 // MARK: - Selection Feedback
@@ -129,3 +130,4 @@ public extension ChangeEffect where Self == NotificationFeedbackChangeEffect {
         Self(type: type)
     }
 }
+#endif

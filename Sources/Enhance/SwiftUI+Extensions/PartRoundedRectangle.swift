@@ -1,5 +1,6 @@
 
 import SwiftUI
+#if canImport(UIKit)
 
 public extension View {
     func cornerRadius(_ radius: CGFloat, corners: PartRoundedRectangle.Corners) -> some View {
@@ -100,3 +101,5 @@ struct PartRoundedRectangle_Previews: PreviewProvider {
             .environment(\.layoutDirection, .rightToLeft)
     }
 }
+
+#endif

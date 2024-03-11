@@ -48,7 +48,6 @@ struct PushDown_Previews: PreviewProvider {
                 .background(.tint, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .opacity(configuration.isPressed ? 0.75 : 1)
                 .conditionalEffect(.pushDown, condition: configuration.isPressed)
-                .changeEffect(.feedbackHapticSelection, value: configuration.isPressed)
                 .changeEffect(.shimmer, value: isEnabled, isEnabled: isEnabled)
                 .animation(.smooth, value: isEnabled)
         }
