@@ -13,8 +13,8 @@ public extension URLRequest {
     init<Value: Encodable, Encoder: TopLevelEncoder>(
         url: URL,
         method: String,
-        encoder: Encoder = JSONEncoder().with(dateEncodingStrategy: .iso8601),
-        body: Value
+        body: Value,
+        encoder: Encoder = JSONEncoder().with(dateEncodingStrategy: .iso8601)
     )
         where Encoder.Output == Data
     {
