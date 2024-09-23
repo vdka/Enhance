@@ -54,7 +54,7 @@ public extension SingleValueDecodingContainer {
         if let number = try? decode(Double.self) {
             let threshold: Double = 32503593600 // Tue Dec 31 10:00:00 +1000 2999
             let looksLikeSeconds = number < threshold // This means any milliseconds date before 1971 will fail
-            if number < threshold {
+            if looksLikeSeconds {
                 return Date(timeIntervalSince1970: number)
             } else { // Assume milliseconds
                 return Date(timeIntervalSince1970: number / 1000)

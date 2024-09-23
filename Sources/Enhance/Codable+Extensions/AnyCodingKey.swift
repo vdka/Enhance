@@ -1,5 +1,5 @@
 
-public struct AnyCodingKey: CodingKey, ExpressibleByStringLiteral {
+public struct AnyCodingKey: CodingKey, Hashable, ExpressibleByStringLiteral {
     public var stringValue: String
     public var intValue: Int?
 

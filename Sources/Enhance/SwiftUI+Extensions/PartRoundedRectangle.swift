@@ -64,7 +64,7 @@ public struct PartRoundedRectangle: Shape {
         return UIRectCorner(rawValue: corner.rawValue & 0b1111)
     }
 
-    public struct Corners: OptionSet {
+    public struct Corners: OptionSet, Sendable {
         public let rawValue: UInt
         public init(rawValue: UInt) {
             self.rawValue = rawValue

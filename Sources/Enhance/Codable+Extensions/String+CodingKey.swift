@@ -1,5 +1,5 @@
 
-extension String: CodingKey {
+extension String: Swift.CodingKey {
     public var stringValue: String { self }
     public var intValue: Int? { nil }
 

@@ -1,5 +1,5 @@
 
-extension Swift.DecodingError: CustomStringConvertible {
+extension Swift.DecodingError: Swift.CustomStringConvertible {
 
     var context: Swift.DecodingError.Context {
         switch self {

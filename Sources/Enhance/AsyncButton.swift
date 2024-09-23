@@ -14,7 +14,7 @@ public struct AsyncButton<Label: View>: View {
     @State var isLoadingStored: Bool = false
     var isLoading: Binding<Bool>?
 
-    public var action: () async throws -> Void
+    public var action: @MainActor () async throws -> Void
     @ViewBuilder public var label: () -> Label
 
     @State public var error: Error?
@@ -24,7 +24,7 @@ public struct AsyncButton<Label: View>: View {
         role: ButtonRole? = nil,
         errorTitle: String? = nil,
         isLoading: Binding<Bool>? = nil,
-        action: @escaping () async throws -> Void,
+        action: @MainActor @escaping () async throws -> Void,
         @ViewBuilder label: @escaping () -> Label
     ) {
         self.options = options
@@ -57,7 +57,7 @@ public struct AsyncButton<Label: View>: View {
         var role: ButtonRole? = nil
         @Binding var isLoading: Bool
         var errorTitle: String?
-        var action: () async throws -> Void
+        var action: @MainActor () async throws -> Void
         @ViewBuilder var label: () -> Label
 
         @State var error: Error?
@@ -98,6 +98,9 @@ public struct AsyncButton<Label: View>: View {
                 } else if showProgressView {
                     ZStack {
                         ProgressView()
+                        #if os(macOS)
+                            .controlSize(.mini)
+                        #endif
                         label().opacity(0)
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
