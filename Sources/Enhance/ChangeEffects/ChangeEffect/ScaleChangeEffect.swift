@@ -6,9 +6,9 @@ public struct ScaleChangeEffect: ChangeEffect {
     public var cooldown: TimeInterval = 0
     public var defaultAnimation: Animation? = .easeInOut
 
-    public var amount: CGFloat
+    public var amount: CGFloat = 1.15
 
-    public init(amount: CGFloat) {
+    public init(amount: CGFloat = 1.15) {
         self.amount = amount
     }
 

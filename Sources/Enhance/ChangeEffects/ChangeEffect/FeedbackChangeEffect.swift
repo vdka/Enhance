@@ -12,6 +12,11 @@ public struct SelectionFeedbackChangeEffect: ChangeEffect {
 
     public var generator = UISelectionFeedbackGenerator()
 
+    init(cooldown: TimeInterval = 0, generator: UISelectionFeedbackGenerator = UISelectionFeedbackGenerator()) {
+        self.cooldown = cooldown
+        self.generator = generator
+    }
+
     public func modifier(count: Int) -> some ViewModifier {
         Modifier(generator: generator, value: count)
     }
@@ -105,6 +110,16 @@ public struct NotificationFeedbackChangeEffect: ChangeEffect {
 
     public var type: UINotificationFeedbackGenerator.FeedbackType
     public var generator = UINotificationFeedbackGenerator()
+
+    public init(
+        cooldown: TimeInterval = 0,
+        type: UINotificationFeedbackGenerator.FeedbackType,
+        generator: UINotificationFeedbackGenerator = UINotificationFeedbackGenerator()
+    ) {
+        self.cooldown = cooldown
+        self.type = type
+        self.generator = generator
+    }
 
     public func modifier(count: Int) -> some ViewModifier {
         Modifier(generator: generator, type: type, value: count)

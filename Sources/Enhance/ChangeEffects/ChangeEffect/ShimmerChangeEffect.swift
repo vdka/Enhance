@@ -6,6 +6,12 @@ public struct ShimmerChangeEffect: ChangeEffect {
     public var cooldown: TimeInterval = 0.5
     public var defaultAnimation: Animation? = .easeInOut(duration: 1)
 
+    public init(delay: TimeInterval = 0.25, cooldown: TimeInterval = 0.5, defaultAnimation: Animation? = .easeInOut(duration: 1)) {
+        self.delay = delay
+        self.cooldown = cooldown
+        self.defaultAnimation = defaultAnimation
+    }
+
     public func modifier(count: Int) -> some ViewModifier {
         AnimatedMask(animatableData: CGFloat(count))
     }
